@@ -133,6 +133,18 @@ const getDaysInRange = (startDate, endDate) => {
     return dates;
 };
 
+const formatTimeAgo = (timestamp) => {
+    if (!timestamp) return 'Nunca';
+    const now = new Date();
+    const date = timestamp.toDate();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return '🟢 En línea ahora';
+    if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+    if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} hs`;
+    if (diffInSeconds < 172800) return 'Ayer';
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+};
 // ==========================================
 // 3. COMPONENTES VISUALES SIMPLES
 // ==========================================
@@ -1299,9 +1311,14 @@ const AdminDashboard = () => {
                 <>
                 <div className="flex justify-end mb-4"><Button onClick={() => setShowCreateUserModal(true)} className="w-auto px-4"><UserPlus className="w-4 h-4"/> Nuevo Usuario</Button></div>
                 <Card className="p-0 overflow-hidden">
-                    <div className="bg-gray-50 p-4 border-b border-gray-100"><h3 className="font-bold text-gray-700">Gestión de Usuarios</h3></div>
+                    <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-700">Gestión de Usuarios</h3>
+                        <span className="text-xs text-gray-400 bg-white px-2 py-1 rounded border">Ordenado por última conexión</span>
+                    </div>
                     <div className="divide-y divide-gray-100">
-                        {allUsers.map(u => {
+                        {allUsers
+                            .sort((a, b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0)) // <--- ESTO LOS ORDENA
+                            .map(u => {
                             const isCurrentUser = u.uid === user.uid;
                             return (
                                 <div key={u.uid} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleViewUser(u.uid)}>
@@ -1310,19 +1327,19 @@ const AdminDashboard = () => {
                                             <p className="font-bold text-gray-900">{u.displayName}</p>
                                             {isCurrentUser && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">(Tú)</span>}
                                             {u.role === 'admin' && <Shield className="w-4 h-4 text-purple-600 fill-current opacity-50" />}
-                                            {/* ETIQUETAS DE ESTADO (MEJORA VISUAL v1.6.a) */}
                                             {u.isApproved === false && (
                                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-red-100 text-red-600 border border-red-200">
                                                     Pendiente
                                                 </span>
                                             )}
-                                            {u.isAbsent && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-orange-100 text-orange-600 border border-orange-200 flex items-center gap-0.5">
-                                                    <PauseCircle className="w-3 h-3"/> Licencia
-                                                </span>
-                                            )}
                                         </div>
-                                        <p className="text-xs text-gray-500">{u.email}</p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <p className="text-xs text-gray-500">{u.email}</p>
+                                            {/* <--- AQUÍ SE MUESTRA EL TIEMPO ---> */}
+                                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 flex items-center gap-1">
+                                                {formatTimeAgo(u.lastLogin)}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-3"><span className={`text-xs px-2 py-1 rounded capitalize font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>{u.role}</span><div className="p-2 text-gray-400"><Eye className="w-4 h-4"/></div></div>
                                 </div>
@@ -1441,18 +1458,16 @@ const MainLayout = () => {
   useEffect(() => {
     if (user && userData) {
         const syncUserDirectory = async () => {
-             let dirRef;
-             if (USE_YOUR_OWN_DB) {
-                 dirRef = doc(db, 'user_directory', user.uid);
-             } else {
-                 dirRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_directory', user.uid);
-             }
+             // Ya no necesitamos el "if" porque en tu PC siempre es la DB real
+             let dirRef = doc(db, 'user_directory', user.uid);
+             
              await setDoc(dirRef, {
                 uid: user.uid,
                 displayName: userData.displayName || 'Usuario',
                 email: userData.email || '', 
                 phone: userData.phone || '',
-                role: userData.role || 'user'
+                role: userData.role || 'user',
+                lastLogin: serverTimestamp() // <--- ¡ESTE ES EL RASTREADOR NUEVO!
             }, { merge: true });
         };
         syncUserDirectory();
