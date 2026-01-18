@@ -202,7 +202,7 @@ const MaintenanceScreen = () => (
             <p className="text-gray-500 mb-6">El sistema se encuentra temporalmente en mantenimiento.</p>
             <div className="inline-block bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold text-gray-600">Volveremos en breve ⏳</div>
         </div>
-        <footer className="mt-12 text-center text-xs text-gray-400">Desarrollado por Nahuel Amado - Noxyx Devs | App v1.6.c</footer>
+        <footer className="mt-12 text-center text-xs text-gray-400">Desarrollado por Nahuel Amado - Noxyx Devs | App v1.7</footer>
     </div>
 );
 
@@ -214,7 +214,7 @@ const PendingApprovalScreen = ({ onLogout }) => (
             <p className="text-gray-500 mb-6">Tu registro ha sido exitoso, pero tu cuenta debe ser <b>aprobada por un administrador</b>.</p>
             <button onClick={onLogout} className="w-full py-3 px-4 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all flex items-center justify-center gap-2"><LogOut className="w-4 h-4"/> Cerrar Sesión</button>
         </div>
-        <footer className="mt-12 text-center text-xs text-gray-400">Desarrollado por Nahuel Amado - Noxyx Devs | App v1.6.c</footer>
+        <footer className="mt-12 text-center text-xs text-gray-400">Desarrollado por Nahuel Amado - Noxyx Devs | App v1.7</footer>
     </div>
 );
 
@@ -1620,7 +1620,7 @@ const MainLayout = () => {
             rel="noopener noreferrer"
             className="text-xs text-gray-400 hover:text-blue-600 transition-colors font-medium flex items-center justify-center gap-1"
           >
-            Desarrollado por Nahuel Amado - Noxyx Devs <ExternalLink className="w-3 h-3"/> | App v1.6.d
+            Desarrollado por Nahuel Amado - Noxyx Devs <ExternalLink className="w-3 h-3"/> | App v1.7
           </a>
       </footer>
     </div>
