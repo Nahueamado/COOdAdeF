@@ -245,33 +245,49 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const initAuth = async () => {
-      if (!USE_YOUR_OWN_DB) {
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-          else await signInAnonymously(auth);
-      }
-    };
-    initAuth();
+    // Escuchamos el estado de autenticación de Firebase
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
       if (currentUser) {
-        const userRef = getUserDocRef(currentUser.uid);
-        const unsubUserData = onSnapshot(userRef, (docSnap) => {
-            if (docSnap.exists()) setUserData(docSnap.data());
-            else setUserData({ role: 'user', displayName: currentUser.displayName || 'Usuario' });
-        }, (error) => {
-            console.error("Error leyendo perfil:", error);
-            setUserData({ role: 'user', displayName: currentUser.displayName || 'Usuario (Modo Seguro)' });
-        });
-        return () => unsubUserData();
+        // 1. Usuario detectado: Guardamos la sesión básica
+        setUser(currentUser);
+        
+        // 2. Intentamos leer sus datos extra de la base de datos
+        try {
+          // Usamos referencia directa a la colección real
+          const userDocRef = doc(db, 'user_directory', currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            setUserData(userDoc.data());
+          } else {
+            // Si no tiene datos (usuario nuevo), usamos datos básicos
+            setUserData({ 
+              displayName: currentUser.displayName || 'Usuario', 
+              email: currentUser.email,
+              role: 'user' 
+            });
+          }
+        } catch (error) {
+          console.error("⚠️ Error leyendo datos (pero te dejo entrar):", error);
+          // Modo seguro: si falla la DB, entras con datos básicos
+          setUserData({ 
+             displayName: currentUser.displayName || 'Usuario (Modo Seguro)', 
+             role: 'user' 
+          });
+        }
       } else {
+        // 3. No hay usuario (Cerró sesión)
+        setUser(null);
         setUserData(null);
       }
+
+      // 4. ¡LO MÁS IMPORTANTE! Quitamos el "Cargando" pase lo que pase
       setLoading(false);
     });
+
+    // Limpieza al desmontar
     return () => unsubscribe();
   }, []);
-
   const logout = () => signOut(auth);
 
   return (
