@@ -1775,7 +1775,7 @@ const MainLayout = () => {
             rel="noopener noreferrer"
             className="text-xs text-gray-400 hover:text-blue-600 transition-colors font-medium flex items-center justify-center gap-1"
           >
-            Desarrollado por Nahuel Amado - Noxyx Devs <ExternalLink className="w-3 h-3"/> | App v1.7
+            Desarrollado por Nahuel Amado - Noxyx Devs <ExternalLink className="w-3 h-3"/> | App v1.8
           </a>
       </footer>
     </div>
