@@ -12,30 +12,34 @@ import {
   signInWithPopup,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  serverTimestamp,
-  updateDoc,
-  addDoc,
-  deleteDoc
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  where, 
+  orderBy, 
+  serverTimestamp 
 } from 'firebase/firestore';
 import {
-  Car,ArrowLeft, CheckCircle, XCircle, Calendar, LogOut, Users, ClipboardList,
+  // --- ORIGINALES (Recuperados de GitHub) ---
+  Car, CheckCircle, XCircle, Calendar, LogOut, Users, ClipboardList,
   MessageCircle, Shield, Menu, X, User, Plus, Lock, Unlock, CalendarDays,
   Clock, AlertTriangle, Save, CreditCard, Phone, UserCircle, Edit, Mail,
   Fingerprint, Copy, Globe, Settings, Trash, Pencil, History, FileText,
   ChevronRight, LayoutDashboard, Award, Activity, Eye, ExternalLink,
   Hammer, Construction, UserX, ThumbsDown, ThumbsUp, RefreshCw, UserPlus,
-  RotateCcw, ShieldAlert, UserCheck, PauseCircle, Info
+  RotateCcw, ShieldAlert, UserCheck, PauseCircle, Info,
+
+  // --- NUEVOS (Agregados para la v1.8) ---
+  Briefcase, Download, PlusCircle, Trash2
 } from 'lucide-react';
 
 // --- CONFIGURACIÓN CORREGIDA PARA TU PC ---
@@ -704,8 +708,7 @@ const RefereeHistory = () => {
     );
 };
 
-const RefereeDashboard = () => {
-  const { user, userData } = useAuth();
+const RefereeDashboard = ({ user, userData, tools }) => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [events, setEvents] = useState([]);
@@ -936,11 +939,41 @@ const RefereeDashboard = () => {
                 )}
           </Card>
       )}
+      {/* HERRAMIENTAS v1.8 */}
+            {tools && tools.length > 0 && (
+                <div className="mt-6 mb-8">
+                    <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-blue-600"/> Herramientas y Documentos
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                        {tools.map(tool => (
+                            <a 
+                                key={tool.id} 
+                                href={tool.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group cursor-pointer"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <Download className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{tool.title}</span>
+                                        <span className="text-xs text-gray-400">Clic para descargar/ver</span>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
     </div>
   );
 };
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ userData, tools, newTool, setNewTool, handleAddTool, handleDeleteTool }) => {
     const [activeTab, setActiveTab] = useState('designations');
     const [confirmations, setConfirmations] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
@@ -1106,6 +1139,9 @@ const AdminDashboard = () => {
                     <button onClick={() => setActiveTab('history')} className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600'}`}>Historial</button>
                     <button onClick={() => setActiveTab('users')} className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'users' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600'}`}>Usuarios</button>
                     <button onClick={() => setActiveTab('settings')} className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600'}`}>Configuración</button>
+                    <button onClick={() => setActiveTab('tools')} className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'tools' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}`}>
+    Herramientas
+</button>
                 </div>
             </div>
             
@@ -1421,6 +1457,71 @@ const AdminDashboard = () => {
                     </form>
                 </Card>
             )}
+            {/* PESTAÑA DE HERRAMIENTAS (v1.8) */}
+            {activeTab === 'tools' && (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <PlusCircle className="w-5 h-5 text-blue-600"/> Subir Nueva Herramienta
+                        </h3>
+                        <form onSubmit={handleAddTool} className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-1 w-full">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Título del botón</label>
+                                <input 
+                                    className="w-full p-2.5 border border-gray-300 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                                    placeholder="Ej: Reglamento 2026" 
+                                    value={newTool.title} 
+                                    onChange={e => setNewTool({...newTool, title: e.target.value})} 
+                                />
+                            </div>
+                            <div className="flex-1 w-full">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Link (Google Drive / PDF)</label>
+                                <input 
+                                    className="w-full p-2.5 border border-gray-300 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                                    placeholder="https://..." 
+                                    value={newTool.link} 
+                                    onChange={e => setNewTool({...newTool, link: e.target.value})} 
+                                />
+                            </div>
+                            <Button type="submit" className="w-full md:w-auto h-[42px]">
+                                Publicar
+                            </Button>
+                        </form>
+                    </div>
+
+                    {/* LISTA DE ARCHIVOS CARGADOS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tools.map(tool => (
+                            <div key={tool.id} className="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-4 overflow-hidden">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                                        <FileText className="w-6 h-6" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-gray-800 truncate">{tool.title}</h4>
+                                        <a href={tool.url} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate block">
+                                            {tool.url}
+                                        </a>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleDeleteTool(tool.id)} 
+                                    className="p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors"
+                                    title="Eliminar"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
+                        ))}
+                        
+                        {tools.length === 0 && (
+                            <div className="col-span-1 md:col-span-2 text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                                <p className="text-gray-400 font-medium">No hay herramientas publicadas todavía.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
             <Modal isOpen={showEventModal} onClose={() => setShowEventModal(false)} title={editingEventId ? "Editar Fecha" : "Crear Nueva Fecha"}>
                 <form onSubmit={handleSaveEvent} className="space-y-4">
                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Título</label><input required type="text" placeholder="Ej: Fecha 5 - Torneo Apertura" className="w-full p-3 rounded-xl border border-gray-200 focus:border-blue-500 outline-none" value={newEvent.title} onChange={(e) => handleDateChange('title', e.target.value)}/></div>
@@ -1471,7 +1572,43 @@ const MainLayout = () => {
   const { user, userData, logout, appName, maintenanceMode } = useAuth(); 
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState('home');
+// --- ESTADOS PARA LA v1.8 (HERRAMIENTAS) ---
+  const [tools, setTools] = useState([]);
+  const [newTool, setNewTool] = useState({ title: '', link: '' });
 
+  // --- EFECTO PARA CARGAR HERRAMIENTAS ---
+  useEffect(() => {
+    // Escuchamos la colección "tools" ordenada por fecha
+    const q = query(collection(db, "tools"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const toolsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTools(toolsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // --- FUNCIONES ---
+  const handleAddTool = async (e) => {
+      e.preventDefault();
+      if (!newTool.title.trim() || !newTool.link.trim()) return alert("Completa todos los campos");
+      try {
+          await addDoc(collection(db, "tools"), {
+              title: newTool.title,
+              url: newTool.link,
+              createdAt: serverTimestamp()
+          });
+          setNewTool({ title: '', link: '' }); 
+          alert("Botón creado con éxito");
+      } catch (error) {
+          console.error("Error:", error);
+          alert("Error al crear");
+      }
+  };
+
+  const handleDeleteTool = async (id) => {
+      if(!confirm("¿Seguro que quieres borrar este botón?")) return;
+      await deleteDoc(doc(db, "tools", id));
+  };
   useEffect(() => {
     if (user && userData) {
         const syncUserDirectory = async () => {
@@ -1606,11 +1743,29 @@ const MainLayout = () => {
       )}
 
       <main className="py-6 flex-grow">
-        {view === 'admin' && isAdmin ? <AdminDashboard /> : 
-         view === 'profile' ? <UserProfile /> :
-         view === 'history' ? <RefereeHistory /> :
-         <RefereeDashboard />
-        }
+        {view === 'admin' && isAdmin ? (
+          // 1. Aquí pasamos las herramientas al Admin
+          <AdminDashboard 
+             user={user}
+             userData={userData}
+             tools={tools} 
+             newTool={newTool} 
+             setNewTool={setNewTool} 
+             handleAddTool={handleAddTool} 
+             handleDeleteTool={handleDeleteTool}
+          /> 
+        ) : view === 'profile' ? (
+          <UserProfile />
+        ) : view === 'history' ? (
+          <RefereeHistory />
+        ) : (
+          // 2. Aquí pasamos las herramientas al Árbitro (RefereeDashboard)
+          <RefereeDashboard 
+             user={user}
+             userData={userData}
+             tools={tools}
+          />
+        )}
       </main>
 
       <footer className="py-6 text-center border-t border-gray-200 mt-auto bg-white">
